@@ -1,8 +1,28 @@
-🚀 Database Abstraction Layer (Stored Procedures)
-I developed a set of Stored Procedures to abstract and streamline core database operations. These procedures ensure data integrity and simplify the interaction with the database by handling:
+# MusicStore Database Management (T-SQL)
 
-Simplified Inserts: Automated procedures for adding new records with built-in validation.
+This project implements the backend logic for a **MusicStore** application using **Transact-SQL (T-SQL)**. It acts as a Database Abstraction Layer, featuring 13 stored procedures designed to automate data integrity, handle complex many-to-many relationships, and orchestrate secure user onboarding via transactional scopes.
 
-Optimized Selects: Custom procedures for retrieving filtered data without writing complex joins every time.
+## Key Technical Highlights
 
-Safe Updates: Controlled update procedures that ensure only authorized fields are modified, maintaining data consistency.
+### 1. Transactional Profile Creation (ACID Compliance)
+The most complex feature is the **User Registration Pipeline** found in `profile_procedure.sql`.
+I implemented a single **Transactional Procedure** (`Create_Full_Profile`) that orchestrates inserts across 4 different tables.
+
+* **Atomic Operation:** It creates the Person, Address, Phone, and Security Question in a single execution block.
+* **Rollback Safety:** Uses `BEGIN TRAN` and `COMMIT TRAN`. If any part of the profile fails, the entire operation is rolled back to prevent "orphan records".
+
+```text
+[ EXEC Create_Full_Profile ]
+       |
+       v
+[ BEGIN TRANSACTION ]
+       |
+       +--> 1. Insert Person (Get Scope Identity ID)
+       |        |
+       +--> 2. Insert Address (Use ID from step 1)
+       |        |
+       +--> 3. Insert Phone
+       |        |
+       +--> 4. Insert Secret Question
+       |
+[ COMMIT TRANSACTION ] (Data is saved only if ALL steps succeed)
